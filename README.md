@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tarihselyazı.com</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #fff0f3;
+      color: #222;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(45deg, #c1121f, #f72585);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #c1121f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #f72585;
+    }
+
+    .yazilar {
+      margin-top: 30px;
+    }
+
+    .yazi {
+      background: #fff0f3;
+      border-left: 5px solid #c1121f;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .yazi h3 {
+      color: #c1121f;
+      margin-top: 0;
+    }
+
+    .sil-btn {
+      background: #f72585;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: none;
+    }
+
+    .sil-btn:hover {
+      background: #c1121f;
+    }
+
+    h2 {
+      color: #c1121f;
+    }
+
+    .gizli {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Tarihselyazı.com</h1>
+    <p>Geçmişin izinde, kalemin gücüyle...</p>
+  </header>
+
+  <div class="container">
+
+    <div id="loginEkrani">
+      <h2>🔐 Yazı Ekleme Girişi</h2>
+      <input type="password" id="sifre" placeholder="Yazı eklemek için şifre gir">
+      <button onclick="girisYap()">Giriş Yap</button>
+    </div>
+
+    <div id="yaziEkleBolumu" class="gizli">
+      <h2>📝 Yeni Yazı Ekle</h2>
+      <input type="text" id="baslik" placeholder="Yazı başlığı">
+      <textarea id="icerik" rows="5" placeholder="Yazı içeriğini buraya yaz..."></textarea>
+      <button onclick="yaziEkle()">Yazıyı Kaydet</button>
+      <button onclick="cikisYap()" style="background:#555;">Çıkış Yap</button>
+    </div>
+
+    <h2>📚 Yazılar</h2>
+    <div class="yazilar" id="yazilar"></div>
+
+  </div>
+
+  <script>
+    const dogruSifre = "1234"; // 🔑 Şifreni buradan değiştir
+    let girisYapildi = false;
+
+    window.onload = function() {
+      yazilariGoster();
+    };
+
+    function girisYap() {
+      const girilen = document.getElementById("sifre").value;
+      if (girilen === dogruSifre) {
+        girisYapildi = true;
+        document.getElementById("loginEkrani").classList.add("gizli");
+        document.getElementById("yaziEkleBolumu").classList.remove("gizli");
+        alert("Giriş başarılı! Artık yazı ekleyip silebilirsin.");
+        yazilariGoster();
+      } else {
+        alert("Yanlış şifre!");
+      }
+    }
+
+    function cikisYap() {
+      girisYapildi = false;
+      document.getElementById("yaziEkleBolumu").classList.add("gizli");
+      document.getElementById("loginEkrani").classList.remove("gizli");
+      document.getElementById("sifre").value = "";
+      yazilariGoster();
+    }
+
+    function yaziEkle() {
+      const baslik = document.getElementById("baslik").value.trim();
+      const icerik = document.getElementById("icerik").value.trim();
+      if (!baslik || !icerik) {
+        alert("Lütfen başlık ve içerik gir!");
+        return;
+      }
+
+      const yeniYazi = {
+        baslik: baslik,
+        icerik: icerik,
+        tarih: new Date().toLocaleString("tr-TR")
+      };
+
+      let yazilar = JSON.parse(localStorage.getItem("yazilar")) || [];
+      yazilar.unshift(yeniYazi);
+      localStorage.setItem("yazilar", JSON.stringify(yazilar));
+
+      document.getElementById("baslik").value = "";
+      document.getElementById("icerik").value = "";
+      yazilariGoster();
+      alert("Yazı başarıyla kaydedildi!");
+    }
+
+    function yazilariGoster() {
+      const yazilar = JSON.parse(localStorage.getItem("yazilar")) || [];
+      const container = document.getElementById("yazilar");
+      container.innerHTML = "";
+
+      if (yazilar.length === 0) {
+        container.innerHTML = "<p>Henüz hiç yazı eklenmemiş.</p>";
+        return;
+      }
+
+      yazilar.forEach((yazi, index) => {
+        const div = document.createElement("div");
+        div.classList.add("yazi");
+        div.innerHTML = `
+          <h3>${yazi.baslik}</h3>
+          <p>${yazi.icerik}</p>
+          <small><em>${yazi.tarih}</em></small>
+          <button class="sil-btn" onclick="yaziSil(${index})">Sil</button>
+        `;
+        container.appendChild(div);
+      });
+
+      // Sadece giriş yaptıysan sil butonlarını göster
+      if (girisYapildi) {
+        document.querySelectorAll(".sil-btn").forEach(btn => btn.style.display = "block");
+      }
+    }
+
+    function yaziSil(index) {
+      if (!girisYapildi) {
+        alert("Yazı silmek için giriş yapmalısın!");
+        return;
+      }
+
+      if (confirm("Bu yazıyı silmek istediğine emin misin?")) {
+        let yazilar = JSON.parse(localStorage.getItem("yazilar")) || [];
+        yazilar.splice(index, 1);
+        localStorage.setItem("yazilar", JSON.stringify(yazilar));
+        yazilariGoster();
+      }
+    }
+  </script>
+
+</body>
+</html>
